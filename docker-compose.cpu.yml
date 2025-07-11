@@ -5,7 +5,7 @@ services:
   chatterbox-tts:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.cpu
+      dockerfile: Dockerfile.cpu
     container_name: chatterbox-tts-api-cpu
     ports:
       - '${PORT:-4123}:${PORT:-4123}'

@@ -119,17 +119,17 @@ with open("output.wav", "wb") as f:
 
 **All Docker files updated with python-multipart:**
 
-- `docker/Dockerfile` - Standard Docker image
-- `docker/Dockerfile.cpu` - CPU-only image
-- `docker/Dockerfile.gpu` - GPU-enabled image
-- `docker/Dockerfile.uv` - uv-optimized image
-- `docker/Dockerfile.uv.gpu` - uv + GPU image
+- `dockerfile` - Standard Docker image
+- `dockerfile.cpu` - CPU-only image
+- `dockerfile.gpu` - GPU-enabled image
+- `dockerfile.uv` - uv-optimized image
+- `dockerfile.uv.gpu` - uv + GPU image
 
 **Docker Usage:**
 
 ```bash
 # Build and run with voice upload support
-docker compose -f docker/docker-compose.yml up -d
+docker compose -f docker-compose.yml up -d
 
 # Test voice upload
 curl -X POST http://localhost:4123/v1/audio/speech \

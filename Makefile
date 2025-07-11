@@ -151,7 +151,7 @@ test-smoke:
 # Docker targets (if using Docker)
 docker-test:
 	@echo "🐳 Running tests in Docker..."
-	docker-compose -f docker/docker-compose.yml up --build --abort-on-container-exit api-test
+	docker-compose -f docker-compose.yml up --build --abort-on-container-exit api-test
 
 # Development workflow targets
 dev-setup: dev-install

@@ -35,7 +35,7 @@ def start_prod():
 def start_fullstack():
     """Start the full stack (API + Frontend) with Docker Compose"""
     print("🚀 Starting Chatterbox TTS API Full Stack (API + Frontend)...")
-    cmd = ["docker", "compose", "-f", "docker/docker-compose.yml", "--profile", "frontend", "up", "--build"]
+    cmd = ["docker", "compose", "-f", "docker-compose.yml", "--profile", "frontend", "up", "--build"]
     subprocess.run(cmd)
 
 

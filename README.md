@@ -115,16 +115,16 @@ cp .env.example.docker .env  # Docker-specific paths, ready to use
 # Choose your deployment method:
 
 # API Only (default)
-docker compose -f docker/docker-compose.yml up -d             # Standard (pip-based)
-docker compose -f docker/docker-compose.uv.yml up -d          # uv-optimized (faster builds)
-docker compose -f docker/docker-compose.gpu.yml up -d         # Standard + GPU
-docker compose -f docker/docker-compose.uv.gpu.yml up -d      # uv + GPU (recommended for GPU users)
-docker compose -f docker/docker-compose.cpu.yml up -d         # CPU-only
+docker compose -f docker-compose.yml up -d             # Standard (pip-based)
+docker compose -f docker-compose.uv.yml up -d          # uv-optimized (faster builds)
+docker compose -f docker-compose.gpu.yml up -d         # Standard + GPU
+docker compose -f docker-compose.uv.gpu.yml up -d      # uv + GPU (recommended for GPU users)
+docker compose -f docker-compose.cpu.yml up -d         # CPU-only
 
 # API + Frontend (add --profile frontend to any of the above)
-docker compose -f docker/docker-compose.yml --profile frontend up -d             # Standard + Frontend
-docker compose -f docker/docker-compose.gpu.yml --profile frontend up -d         # GPU + Frontend
-docker compose -f docker/docker-compose.uv.gpu.yml --profile frontend up -d      # uv + GPU + Frontend
+docker compose -f docker-compose.yml --profile frontend up -d             # Standard + Frontend
+docker compose -f docker-compose.gpu.yml --profile frontend up -d         # GPU + Frontend
+docker compose -f docker-compose.uv.gpu.yml --profile frontend up -d      # uv + GPU + Frontend
 
 # Watch the logs as it initializes (the first use of TTS takes the longest)
 docker logs chatterbox-tts-api -f
@@ -145,18 +145,18 @@ This project includes an optional React-based web UI. Use Docker Compose profile
 
 ```bash
 # API only (default behavior)
-docker compose -f docker/docker-compose.yml up -d
+docker compose -f docker-compose.yml up -d
 
 # API + Frontend + Web UI (with --profile frontend)
-docker compose -f docker/docker-compose.yml --profile frontend up -d
+docker compose -f docker-compose.yml --profile frontend up -d
 
 # Or use the convenient helper script for fullstack:
 python start.py fullstack
 
 # Same pattern works with all deployment variants:
-docker compose -f docker/docker-compose.gpu.yml --profile frontend up -d    # GPU + Frontend
-docker compose -f docker/docker-compose.uv.yml --profile frontend up -d     # uv + Frontend
-docker compose -f docker/docker-compose.cpu.yml --profile frontend up -d    # CPU + Frontend
+docker compose -f docker-compose.gpu.yml --profile frontend up -d    # GPU + Frontend
+docker compose -f docker-compose.uv.yml --profile frontend up -d     # uv + Frontend
+docker compose -f docker-compose.cpu.yml --profile frontend up -d    # CPU + Frontend
 ```
 
 ### Local Development
@@ -523,7 +523,7 @@ For best results:
 ### Development
 
 ```bash
-docker compose -f docker/docker-compose.yml up
+docker compose -f docker-compose.yml up
 ```
 
 ### Production
@@ -534,7 +534,7 @@ cp .env.example.docker .env
 nano .env  # Set production values
 
 # Deploy
-docker compose -f docker/docker-compose.yml up -d
+docker compose -f docker-compose.yml up -d
 ```
 
 ### With GPU Support
@@ -542,7 +542,7 @@ docker compose -f docker/docker-compose.yml up -d
 ```bash
 # Use GPU-enabled compose file
 # Ensure NVIDIA Container Toolkit is installed
-docker compose -f docker/docker-compose.gpu.yml up -d
+docker compose -f docker-compose.gpu.yml up -d
 ```
 
 </details>
@@ -766,20 +766,20 @@ This happens because `chatterbox-tts` models require PyTorch with CUDA support, 
 
 ```bash
 # Option 1: Use default setup (now includes CUDA-enabled PyTorch)
-docker compose -f docker/docker-compose.yml up -d
+docker compose -f docker-compose.yml up -d
 
 # Option 2: Use explicit CUDA setup (traditional)
-docker compose -f docker/docker-compose.gpu.yml up -d
+docker compose -f docker-compose.gpu.yml up -d
 
 # Option 3: Use uv + GPU setup (recommended for GPU users)
-docker compose -f docker/docker-compose.uv.gpu.yml up -d
+docker compose -f docker-compose.uv.gpu.yml up -d
 
 # Option 4: Use CPU-only setup (may have compatibility issues)
-docker compose -f docker/docker-compose.cpu.yml up -d
+docker compose -f docker-compose.cpu.yml up -d
 
 # Option 5: Clear model cache and retry with CUDA-enabled setup
 docker volume rm chatterbox-tts-api_chatterbox-models
-docker compose -f docker/docker-compose.yml up -d --build
+docker compose -f docker-compose.yml up -d --build
 
 # Option 6: Try uv for better dependency resolution
 uv sync

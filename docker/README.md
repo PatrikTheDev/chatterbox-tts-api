@@ -8,17 +8,17 @@ This directory contains Docker configurations for the Chatterbox TTS API with **
 
 ```bash
 # Standard deployment
-docker compose -f docker/docker-compose.yml up -d
+docker compose -f docker-compose.yml up -d
 
 # GPU-enabled (if you have NVIDIA GPU)
-docker compose -f docker/docker-compose.gpu.yml up -d
+docker compose -f docker-compose.gpu.yml up -d
 
 # uv-optimized builds (faster dependency resolution)
-docker compose -f docker/docker-compose.uv.yml up -d
-docker compose -f docker/docker-compose.uv.gpu.yml up -d
+docker compose -f docker-compose.uv.yml up -d
+docker compose -f docker-compose.uv.gpu.yml up -d
 
 # CPU-only (explicit CPU mode)
-docker compose -f docker/docker-compose.cpu.yml up -d
+docker compose -f docker-compose.cpu.yml up -d
 ```
 
 **API Access:** `http://localhost:4123`
@@ -29,13 +29,13 @@ Add `--profile frontend` to any of the above commands:
 
 ```bash
 # Standard with frontend
-docker compose -f docker/docker-compose.yml --profile frontend up -d
+docker compose -f docker-compose.yml --profile frontend up -d
 
 # GPU with frontend
-docker compose -f docker/docker-compose.gpu.yml --profile frontend up -d
+docker compose -f docker-compose.gpu.yml --profile frontend up -d
 
 # uv + GPU with frontend (recommended for GPU users)
-docker compose -f docker/docker-compose.uv.gpu.yml --profile frontend up -d
+docker compose -f docker-compose.uv.gpu.yml --profile frontend up -d
 ```
 
 **Frontend Access:** `http://localhost:4321` (API requests are proxied automatically)
@@ -77,19 +77,19 @@ cp .env.example .env
 
 ```bash
 # Start API only
-docker compose -f docker/docker-compose.yml up -d
+docker compose -f docker-compose.yml up -d
 
 # Start with frontend
-docker compose -f docker/docker-compose.yml --profile frontend up -d
+docker compose -f docker-compose.yml --profile frontend up -d
 
 # Check logs
 docker logs chatterbox-tts-api -f
 
 # Stop services
-docker compose -f docker/docker-compose.yml down
+docker compose -f docker-compose.yml down
 
 # Stop with volumes (removes model cache)
-docker compose -f docker/docker-compose.yml down -v
+docker compose -f docker-compose.yml down -v
 ```
 
 ## Architecture
@@ -121,10 +121,10 @@ Make sure you're using the profile flag:
 
 ```bash
 # ❌ Wrong - no frontend
-docker compose -f docker/docker-compose.yml up -d
+docker compose -f docker-compose.yml up -d
 
 # ✅ Correct - includes frontend
-docker compose -f docker/docker-compose.yml --profile frontend up -d
+docker compose -f docker-compose.yml --profile frontend up -d
 ```
 
 ### Port conflicts?
@@ -141,5 +141,5 @@ FRONTEND_PORT=4322  # Frontend port (frontend mode)
 Use the GPU-specific compose file:
 
 ```bash
-docker compose -f docker/docker-compose.gpu.yml --profile frontend up -d
+docker compose -f docker-compose.gpu.yml --profile frontend up -d
 ```

@@ -23,23 +23,23 @@ This guide covers how to run the Chatterbox TTS FastAPI using Docker and Docker 
 
    ```bash
    # Standard setup (pip-based, auto-detects device)
-   docker compose -f docker/docker-compose.yml up -d
+   docker compose -f docker-compose.yml up -d
 
    # uv-optimized setup (faster builds, better dependencies)
-   docker compose -f docker/docker-compose.uv.yml up -d
+   docker compose -f docker-compose.uv.yml up -d
 
    # GPU-optimized (traditional pip + NVIDIA GPU)
-   docker compose -f docker/docker-compose.gpu.yml up -d
+   docker compose -f docker-compose.gpu.yml up -d
 
    # uv + GPU optimized (fastest builds + NVIDIA GPU)
-   docker compose -f docker/docker-compose.uv.gpu.yml up -d
+   docker compose -f docker-compose.uv.gpu.yml up -d
 
    # CPU-only (forced CPU, no GPU dependencies)
-   docker compose -f docker/docker-compose.cpu.yml up -d
+   docker compose -f docker-compose.cpu.yml up -d
    ```
 
    > [!NOTE]  
-   > It's recommended to run `docker compose` from the parent directory and to specify the `.yml` file by referencing it in the docker subfolder (i.e. `-f docker/docker-compose*.yml`)
+   > It's recommended to run `docker compose` from the parent directory and to specify the `.yml` file by referencing it in the docker subfolder (i.e. `-f docker-compose*.yml`)
 
 3. **Test the API:**
 
