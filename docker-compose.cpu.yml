@@ -59,7 +59,7 @@ services:
   frontend:
     profiles: ['frontend', 'ui', 'fullstack']
     build:
-      context: ../frontend
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: chatterbox-tts-frontend
     ports:
