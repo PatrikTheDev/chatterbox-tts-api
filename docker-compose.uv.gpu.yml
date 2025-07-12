@@ -32,14 +32,8 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     volumes:
-      # Mount voice sample file (optional)
-      - ${VOICE_SAMPLE_HOST_PATH:-../voice-sample.mp3}:/app/voice-sample.mp3:ro
-
       - chatterbox-models:/cache
       - chatterbox-voices:/voices
-
-      # Optional: Mount custom voice samples directory (legacy)
-      - ${VOICE_SAMPLES_DIR:-../voice-samples}:/app/voice-samples:ro
 
     # GPU support (enabled by default for this compose file)
     deploy:
