@@ -4,7 +4,6 @@ services:
   # Main API Service (always included)
   chatterbox-tts:
     build:
-      context: ..
       dockerfile: Dockerfile.uv
     container_name: chatterbox-tts-api-uv
     ports:
