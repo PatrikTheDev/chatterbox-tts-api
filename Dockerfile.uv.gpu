@@ -4,6 +4,7 @@ FROM nvidia/cuda:12.4.1-runtime-ubuntu20.04
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV TORCH_CUDA_ARCH_LIST=8.9
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install Python 3.11 and system dependencies
@@ -36,7 +37,7 @@ WORKDIR /app
 RUN uv venv --python 3.11
 
 # Install PyTorch with CUDA support using uv
-RUN uv pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+RUN uv pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu124
 
 # Install base dependencies first
 RUN uv pip install setuptools fastapi uvicorn[standard] python-dotenv python-multipart requests psutil
