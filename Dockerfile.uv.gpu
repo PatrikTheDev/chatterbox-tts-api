@@ -1,11 +1,12 @@
-# Use NVIDIA CUDA runtime as base for better GPU support
-FROM nvidia/cuda:12.4.1-runtime-ubuntu20.04
+# Use an NVIDIA CUDA runtime that matches common hosted driver stacks (12.4 + cuDNN)
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV TORCH_CUDA_ARCH_LIST=8.9
 ENV DEBIAN_FRONTEND=noninteractive
+ENV TRANSFORMERS_NO_TORCHVISION=1
 
 # Install Python 3.11 and system dependencies
 RUN apt-get update && apt-get install -y \
@@ -36,14 +37,17 @@ WORKDIR /app
 # Create virtual environment
 RUN uv venv --python 3.11
 
-# Install PyTorch with CUDA support using uv
-RUN uv pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu124
+# Install PyTorch 2.7.0 wheels built for CUDA 12.4 (sm_89 cubins available)
+# Use cu124 index and pin plain versions to avoid local-version resolution issues
+RUN uv pip install --upgrade \
+    torch==2.7.0 \
+    torchaudio==2.7.0 \
+    --index-url https://download.pytorch.org/whl/cu124 \
+    --extra-index-url https://pypi.org/simple \
+    --index-strategy unsafe-best-match
 
 # Install base dependencies first
 RUN uv pip install setuptools fastapi uvicorn[standard] python-dotenv python-multipart requests psutil
-
-# Install resemble-perth specifically (required for watermarker)
-# RUN uv pip install resemble-perth
 
 # Install chatterbox-tts using uv
 RUN uv pip install chatterbox-tts
@@ -75,6 +79,13 @@ ENV HOST=0.0.0.0
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
+# Torch/CUDA perf tuning and CPU thread controls (helps avoid CPU starvation)
+ENV OMP_NUM_THREADS=2
+ENV MKL_NUM_THREADS=2
+ENV NUMEXPR_NUM_THREADS=2
+ENV PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+ENV CUDA_MODULE_LOADING=LAZY
+
 # Add uv venv to PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
@@ -86,4 +97,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5m --retries=3 \
     CMD curl -f http://localhost:${PORT}/health || exit 1
 
 # Run the application using the new entry point
-CMD ["python", "main.py"] 
+CMD ["python", "main.py"]

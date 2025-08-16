@@ -25,7 +25,7 @@ WORKDIR /app
 RUN uv venv --python 3.11
 
 # Install PyTorch with CPU support using uv
-RUN uv pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+RUN uv pip install torch==2.7.1 torchvision==0.22.0 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cpu
 
 # Install base dependencies first
 RUN uv pip install fastapi uvicorn[standard] python-dotenv python-multipart requests psutil

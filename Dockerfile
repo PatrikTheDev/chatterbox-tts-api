@@ -20,7 +20,7 @@ WORKDIR /app
 
 # Install PyTorch with CUDA support (for chatterbox-tts compatibility)
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+    pip install --no-cache-dir torch==2.7.0+cu128 torchvision==0.22.0+cu128 torchaudio==2.7.0+cu128 --index-url https://download.pytorch.org/whl/test/cu128
 
 # Copy requirements and install other dependencies
 COPY requirements.txt ./

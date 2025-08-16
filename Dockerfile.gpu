@@ -1,5 +1,5 @@
 # Use NVIDIA CUDA runtime as base for better GPU support
-FROM nvidia/cuda:12.4.1-runtime-ubuntu20.04
+FROM nvidia/cuda:12.8.0-runtime-ubuntu20.04
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
@@ -28,7 +28,7 @@ WORKDIR /app
 
 # Install PyTorch with CUDA support
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+    pip install --no-cache-dir torch==2.7.0+cu128 torchvision==0.22.0+cu128 torchaudio==2.7.0+cu128 --index-url https://download.pytorch.org/whl/test/cu128
 
 # Copy requirements and install other dependencies
 COPY requirements.txt ./

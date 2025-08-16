@@ -222,19 +222,31 @@ async def generate_speech_internal(
             
             print(f"Generating audio for chunk {i+1}/{len(chunks)}: '{chunk[:50]}{'...' if len(chunk) > 50 else ''}'")
             
-            # Use torch.no_grad() to prevent gradient accumulation
+            # Use torch.no_grad() and autocast on CUDA-capable GPUs
             with torch.no_grad():
-                # Run TTS generation in executor to avoid blocking
-                audio_tensor = await loop.run_in_executor(
-                    None,
-                    lambda: model.generate(
-                        text=chunk,
-                        audio_prompt_path=voice_sample_path,
-                        exaggeration=exaggeration,
-                        cfg_weight=cfg_weight,
-                        temperature=temperature
+                if torch.cuda.is_available():
+                    with torch.cuda.amp.autocast(dtype=torch.bfloat16):
+                        audio_tensor = await loop.run_in_executor(
+                            None,
+                            lambda: model.generate(
+                                text=chunk,
+                                audio_prompt_path=voice_sample_path,
+                                exaggeration=exaggeration,
+                                cfg_weight=cfg_weight,
+                                temperature=temperature
+                            )
+                        )
+                else:
+                    audio_tensor = await loop.run_in_executor(
+                        None,
+                        lambda: model.generate(
+                            text=chunk,
+                            audio_prompt_path=voice_sample_path,
+                            exaggeration=exaggeration,
+                            cfg_weight=cfg_weight,
+                            temperature=temperature
+                        )
                     )
-                )
                 
                 # Ensure tensor is on the correct device and detached
                 if hasattr(audio_tensor, 'detach'):
@@ -246,7 +258,7 @@ async def generate_speech_internal(
             if i > 0 and i % 3 == 0:  # Every 3 chunks
                 import gc
                 gc.collect()
-                if torch.cuda.is_available():
+                if torch.cuda.is_available() and (REQUEST_COUNTER % Config.CUDA_CACHE_CLEAR_INTERVAL == 0):
                     torch.cuda.empty_cache()
         
         # Concatenate all chunks with memory management
@@ -457,19 +469,31 @@ async def generate_speech_streaming(
             
             print(f"Streaming audio for chunk {i+1}/{len(chunks)}: '{chunk[:50]}{'...' if len(chunk) > 50 else ''}'")
             
-            # Use torch.no_grad() to prevent gradient accumulation
+            # Use torch.no_grad() and autocast on CUDA-capable GPUs
             with torch.no_grad():
-                # Run TTS generation in executor to avoid blocking
-                audio_tensor = await loop.run_in_executor(
-                    None,
-                    lambda: model.generate(
-                        text=chunk,
-                        audio_prompt_path=voice_sample_path,
-                        exaggeration=exaggeration,
-                        cfg_weight=cfg_weight,
-                        temperature=temperature
+                if torch.cuda.is_available():
+                    with torch.cuda.amp.autocast(dtype=torch.bfloat16):
+                        audio_tensor = await loop.run_in_executor(
+                            None,
+                            lambda: model.generate(
+                                text=chunk,
+                                audio_prompt_path=voice_sample_path,
+                                exaggeration=exaggeration,
+                                cfg_weight=cfg_weight,
+                                temperature=temperature
+                            )
+                        )
+                else:
+                    audio_tensor = await loop.run_in_executor(
+                        None,
+                        lambda: model.generate(
+                            text=chunk,
+                            audio_prompt_path=voice_sample_path,
+                            exaggeration=exaggeration,
+                            cfg_weight=cfg_weight,
+                            temperature=temperature
+                        )
                     )
-                )
                 
                 # Ensure tensor is on CPU for streaming
                 if hasattr(audio_tensor, 'cpu'):
@@ -494,7 +518,7 @@ async def generate_speech_streaming(
             if i > 0 and i % 3 == 0:  # Every 3 chunks
                 import gc
                 gc.collect()
-                if torch.cuda.is_available():
+                if torch.cuda.is_available() and (REQUEST_COUNTER % Config.CUDA_CACHE_CLEAR_INTERVAL == 0):
                     torch.cuda.empty_cache()
         
         # Mark as completed
@@ -658,19 +682,31 @@ async def generate_speech_sse(
             
             print(f"SSE streaming audio for chunk {i+1}/{len(chunks)}: '{chunk[:50]}{'...' if len(chunk) > 50 else ''}'")
             
-            # Use torch.no_grad() to prevent gradient accumulation
+            # Use torch.no_grad() and autocast on CUDA-capable GPUs
             with torch.no_grad():
-                # Run TTS generation in executor to avoid blocking
-                audio_tensor = await loop.run_in_executor(
-                    None,
-                    lambda: model.generate(
-                        text=chunk,
-                        audio_prompt_path=voice_sample_path,
-                        exaggeration=exaggeration,
-                        cfg_weight=cfg_weight,
-                        temperature=temperature
+                if torch.cuda.is_available():
+                    with torch.cuda.amp.autocast(dtype=torch.bfloat16):
+                        audio_tensor = await loop.run_in_executor(
+                            None,
+                            lambda: model.generate(
+                                text=chunk,
+                                audio_prompt_path=voice_sample_path,
+                                exaggeration=exaggeration,
+                                cfg_weight=cfg_weight,
+                                temperature=temperature
+                            )
+                        )
+                else:
+                    audio_tensor = await loop.run_in_executor(
+                        None,
+                        lambda: model.generate(
+                            text=chunk,
+                            audio_prompt_path=voice_sample_path,
+                            exaggeration=exaggeration,
+                            cfg_weight=cfg_weight,
+                            temperature=temperature
+                        )
                     )
-                )
                 
                 # Ensure tensor is on CPU for processing
                 if hasattr(audio_tensor, 'cpu'):
@@ -701,7 +737,7 @@ async def generate_speech_sse(
             if i > 0 and i % 3 == 0:  # Every 3 chunks
                 import gc
                 gc.collect()
-                if torch.cuda.is_available():
+                if torch.cuda.is_available() and (REQUEST_COUNTER % Config.CUDA_CACHE_CLEAR_INTERVAL == 0):
                     torch.cuda.empty_cache()
         
         # Send completion event

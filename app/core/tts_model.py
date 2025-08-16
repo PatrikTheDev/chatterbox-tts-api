@@ -6,6 +6,8 @@ import os
 import asyncio
 from enum import Enum
 from typing import Optional
+
+import torch
 from chatterbox.tts import ChatterboxTTS
 from app.config import Config, detect_device
 
@@ -39,6 +41,22 @@ async def initialize_model():
         print(f"Device: {_device}")
         print(f"Voice sample: {Config.VOICE_SAMPLE_PATH}")
         print(f"Model cache: {Config.MODEL_CACHE_DIR}")
+
+        # Runtime performance tuning
+        try:
+            # Prefer TF32 on Ampere/Ada (faster, adequate precision for inference)
+            if hasattr(torch.backends, "cuda"):
+                torch.backends.cuda.matmul.allow_tf32 = True  # type: ignore[attr-defined]
+            if hasattr(torch.backends, "cudnn"):
+                torch.backends.cudnn.allow_tf32 = True  # type: ignore[attr-defined]
+                torch.backends.cudnn.benchmark = True  # type: ignore[attr-defined]
+
+            # Limit CPU threading to reduce oversubscription under concurrent requests
+            cpu_count = os.cpu_count() or 1
+            torch.set_num_threads(max(1, min(4, cpu_count)))
+            torch.set_num_interop_threads(max(1, min(2, cpu_count)))
+        except Exception as tuning_err:
+            print(f"⚠️ Torch tuning skipped: {tuning_err}")
         
         _initialization_progress = "Creating model cache directory..."
         # Ensure model cache directory exists
@@ -52,7 +70,6 @@ async def initialize_model():
         _initialization_progress = "Configuring device compatibility..."
         # Patch torch.load for CPU compatibility if needed
         if _device == 'cpu':
-            import torch
             original_load = torch.load
             original_load_file = None
             
