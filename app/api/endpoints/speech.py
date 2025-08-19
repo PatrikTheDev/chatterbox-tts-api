@@ -242,12 +242,9 @@ async def generate_speech_internal(
                 
                 audio_chunks.append(audio_tensor)
             
-            # Periodic memory cleanup during generation
-            if i > 0 and i % 3 == 0:  # Every 3 chunks
-                import gc
-                gc.collect()
-                if torch.cuda.is_available():
-                    torch.cuda.empty_cache()
+            # Periodic memory cleanup during generation (non-destructive)
+            if i > 0 and i % Config.MEMORY_CLEANUP_INTERVAL == 0:
+                cleanup_memory(force_cuda_clear=False)
         
         # Concatenate all chunks with memory management
         if len(audio_chunks) > 1:
@@ -490,12 +487,9 @@ async def generate_speech_streaming(
                 safe_delete_tensors(audio_tensor, audio_tensor_int)
                 del pcm_data
             
-            # Periodic memory cleanup during generation
-            if i > 0 and i % 3 == 0:  # Every 3 chunks
-                import gc
-                gc.collect()
-                if torch.cuda.is_available():
-                    torch.cuda.empty_cache()
+            # Periodic memory cleanup during generation (non-destructive)
+            if i > 0 and i % Config.MEMORY_CLEANUP_INTERVAL == 0:
+                cleanup_memory(force_cuda_clear=False)
         
         # Mark as completed
         update_tts_status(request_id, TTSStatus.COMPLETED, "Streaming audio generation completed")
@@ -697,12 +691,9 @@ async def generate_speech_sse(
                 safe_delete_tensors(audio_tensor, audio_tensor_int)
                 del pcm_data
             
-            # Periodic memory cleanup during generation
-            if i > 0 and i % 3 == 0:  # Every 3 chunks
-                import gc
-                gc.collect()
-                if torch.cuda.is_available():
-                    torch.cuda.empty_cache()
+            # Periodic memory cleanup during generation (non-destructive)
+            if i > 0 and i % Config.MEMORY_CLEANUP_INTERVAL == 0:
+                cleanup_memory(force_cuda_clear=False)
         
         # Send completion event
         total_output_tokens = total_audio_chunks * 50  # Rough estimate

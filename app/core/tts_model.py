@@ -8,6 +8,7 @@ from enum import Enum
 from typing import Optional
 from chatterbox.tts import ChatterboxTTS
 from app.config import Config, detect_device
+import torch
 
 # Global model instance
 _model = None
@@ -40,6 +41,19 @@ async def initialize_model():
         print(f"Voice sample: {Config.VOICE_SAMPLE_PATH}")
         print(f"Model cache: {Config.MODEL_CACHE_DIR}")
         
+        # Enable high-performance CUDA paths on NVIDIA GPUs (e.g., RTX 4090)
+        if _device == 'cuda':
+            try:
+                torch.backends.cuda.matmul.allow_tf32 = True
+                torch.backends.cudnn.allow_tf32 = True
+                torch.backends.cudnn.benchmark = True
+                # Prefer TF32/high precision matmul fast-paths on Ampere/Ada
+                if hasattr(torch, 'set_float32_matmul_precision'):
+                    torch.set_float32_matmul_precision('high')
+                print("CUDA fast paths enabled: TF32 + cuDNN benchmark")
+            except Exception as _e:
+                print(f"⚠️ Could not enable CUDA fast paths: {_e}")
+        
         _initialization_progress = "Creating model cache directory..."
         # Ensure model cache directory exists
         os.makedirs(Config.MODEL_CACHE_DIR, exist_ok=True)
@@ -52,7 +66,6 @@ async def initialize_model():
         _initialization_progress = "Configuring device compatibility..."
         # Patch torch.load for CPU compatibility if needed
         if _device == 'cpu':
-            import torch
             original_load = torch.load
             original_load_file = None
             

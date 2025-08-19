@@ -28,6 +28,9 @@ services:
       - MODEL_CACHE_DIR=${MODEL_CACHE_DIR:-/cache}
       - VOICE_LIBRARY_DIR=${VOICE_LIBRARY_DIR:-/voices}
 
+      # Memory Settings
+      - MEMORY_CLEANUP_INTERVAL=${MEMORY_CLEANUP_INTERVAL:-32}
+
       # NVIDIA/CUDA settings
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
