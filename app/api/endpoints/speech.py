@@ -130,8 +130,9 @@ async def generate_speech_internal(
     text: str,
     voice_sample_path: str,
     exaggeration: Optional[float] = None,
-    cfg_weight: Optional[float] = None,
-    temperature: Optional[float] = None
+    temperature: Optional[float] = None,
+    top_p: Optional[float] = None,
+    repetition_penalty: Optional[float] = None
 ) -> io.BytesIO:
     """Internal function to generate speech with given parameters"""
     global REQUEST_COUNTER
@@ -144,8 +145,9 @@ async def generate_speech_internal(
         voice_source=voice_source,
         parameters={
             "exaggeration": exaggeration,
-            "cfg_weight": cfg_weight,
             "temperature": temperature,
+            "top_p": top_p,
+            "repetition_penalty": repetition_penalty,
             "voice_sample_path": voice_sample_path
         }
     )
@@ -194,8 +196,9 @@ async def generate_speech_internal(
     try:
         # Get parameters with defaults
         exaggeration = exaggeration if exaggeration is not None else Config.EXAGGERATION
-        cfg_weight = cfg_weight if cfg_weight is not None else Config.CFG_WEIGHT
         temperature = temperature if temperature is not None else Config.TEMPERATURE
+        top_p = top_p if top_p is not None else Config.TOP_P
+        repetition_penalty = repetition_penalty if repetition_penalty is not None else Config.REPETITION_PENALTY
         
         # Split text into chunks
         update_tts_status(request_id, TTSStatus.CHUNKING, "Splitting text into chunks")
@@ -204,8 +207,9 @@ async def generate_speech_internal(
         voice_source = "uploaded file" if voice_sample_path != Config.VOICE_SAMPLE_PATH else "configured sample"
         print(f"Processing {len(chunks)} text chunks with {voice_source} and parameters:")
         print(f"  - Exaggeration: {exaggeration}")
-        print(f"  - CFG Weight: {cfg_weight}")
         print(f"  - Temperature: {temperature}")
+        print(f"  - Top-p: {top_p}")
+        print(f"  - Repetition Penalty: {repetition_penalty}")
         
         # Update status with chunk information
         update_tts_status(request_id, TTSStatus.GENERATING_AUDIO, "Starting audio generation", 
@@ -228,12 +232,13 @@ async def generate_speech_internal(
                 audio_tensor = await loop.run_in_executor(
                     None,
                     lambda: model.generate(
-                        text=chunk,
+                        prompts=chunk,
                         audio_prompt_path=voice_sample_path,
                         exaggeration=exaggeration,
-                        cfg_weight=cfg_weight,
-                        temperature=temperature
-                    )
+                        temperature=temperature,
+                        top_p=top_p,
+                        repetition_penalty=repetition_penalty
+                    )[0]  # Get first result from batch
                 )
                 
                 # Ensure tensor is on the correct device and detached
@@ -338,8 +343,9 @@ async def generate_speech_streaming(
     text: str,
     voice_sample_path: str,
     exaggeration: Optional[float] = None,
-    cfg_weight: Optional[float] = None,
     temperature: Optional[float] = None,
+    top_p: Optional[float] = None,
+    repetition_penalty: Optional[float] = None,
     streaming_chunk_size: Optional[int] = None,
     streaming_strategy: Optional[str] = None,
     streaming_quality: Optional[str] = None
@@ -355,8 +361,9 @@ async def generate_speech_streaming(
         voice_source=voice_source,
         parameters={
             "exaggeration": exaggeration,
-            "cfg_weight": cfg_weight,
             "temperature": temperature,
+            "top_p": top_p,
+            "repetition_penalty": repetition_penalty,
             "voice_sample_path": voice_sample_path,
             "streaming": True,
             "streaming_chunk_size": streaming_chunk_size,
@@ -411,8 +418,9 @@ async def generate_speech_streaming(
     try:
         # Get parameters with defaults
         exaggeration = exaggeration if exaggeration is not None else Config.EXAGGERATION
-        cfg_weight = cfg_weight if cfg_weight is not None else Config.CFG_WEIGHT
         temperature = temperature if temperature is not None else Config.TEMPERATURE
+        top_p = top_p if top_p is not None else Config.TOP_P
+        repetition_penalty = repetition_penalty if repetition_penalty is not None else Config.REPETITION_PENALTY
         
         # Get optimized streaming settings
         streaming_settings = get_streaming_settings(
@@ -431,8 +439,9 @@ async def generate_speech_streaming(
         voice_source = "uploaded file" if voice_sample_path != Config.VOICE_SAMPLE_PATH else "configured sample"
         print(f"Streaming {len(chunks)} text chunks with {voice_source} and parameters:")
         print(f"  - Exaggeration: {exaggeration}")
-        print(f"  - CFG Weight: {cfg_weight}")
         print(f"  - Temperature: {temperature}")
+        print(f"  - Top-p: {top_p}")
+        print(f"  - Repetition Penalty: {repetition_penalty}")
         print(f"  - Streaming Strategy: {streaming_settings['strategy']}")
         print(f"  - Streaming Chunk Size: {streaming_settings['chunk_size']}")
         print(f"  - Streaming Quality: {streaming_settings['quality']}")
@@ -463,12 +472,13 @@ async def generate_speech_streaming(
                 audio_tensor = await loop.run_in_executor(
                     None,
                     lambda: model.generate(
-                        text=chunk,
+                        prompts=chunk,
                         audio_prompt_path=voice_sample_path,
                         exaggeration=exaggeration,
-                        cfg_weight=cfg_weight,
-                        temperature=temperature
-                    )
+                        temperature=temperature,
+                        top_p=top_p,
+                        repetition_penalty=repetition_penalty
+                    )[0]  # Get first result from batch
                 )
                 
                 # Ensure tensor is on CPU for streaming
@@ -534,8 +544,9 @@ async def generate_speech_sse(
     text: str,
     voice_sample_path: str,
     exaggeration: Optional[float] = None,
-    cfg_weight: Optional[float] = None,
     temperature: Optional[float] = None,
+    top_p: Optional[float] = None,
+    repetition_penalty: Optional[float] = None,
     streaming_chunk_size: Optional[int] = None,
     streaming_strategy: Optional[str] = None,
     streaming_quality: Optional[str] = None
@@ -551,8 +562,9 @@ async def generate_speech_sse(
         voice_source=voice_source,
         parameters={
             "exaggeration": exaggeration,
-            "cfg_weight": cfg_weight,
             "temperature": temperature,
+            "top_p": top_p,
+            "repetition_penalty": repetition_penalty,
             "voice_sample_path": voice_sample_path,
             "streaming": True,
             "streaming_format": "sse",
@@ -609,8 +621,9 @@ async def generate_speech_sse(
     try:
         # Get parameters with defaults
         exaggeration = exaggeration if exaggeration is not None else Config.EXAGGERATION
-        cfg_weight = cfg_weight if cfg_weight is not None else Config.CFG_WEIGHT
         temperature = temperature if temperature is not None else Config.TEMPERATURE
+        top_p = top_p if top_p is not None else Config.TOP_P
+        repetition_penalty = repetition_penalty if repetition_penalty is not None else Config.REPETITION_PENALTY
         
         # Get optimized streaming settings
         streaming_settings = get_streaming_settings(
@@ -629,8 +642,9 @@ async def generate_speech_sse(
         voice_source = "uploaded file" if voice_sample_path != Config.VOICE_SAMPLE_PATH else "configured sample"
         print(f"SSE Streaming {len(chunks)} text chunks with {voice_source} and parameters:")
         print(f"  - Exaggeration: {exaggeration}")
-        print(f"  - CFG Weight: {cfg_weight}")
         print(f"  - Temperature: {temperature}")
+        print(f"  - Top-p: {top_p}")
+        print(f"  - Repetition Penalty: {repetition_penalty}")
         print(f"  - Streaming Strategy: {streaming_settings['strategy']}")
         print(f"  - Streaming Chunk Size: {streaming_settings['chunk_size']}")
         print(f"  - Streaming Quality: {streaming_settings['quality']}")
@@ -664,12 +678,13 @@ async def generate_speech_sse(
                 audio_tensor = await loop.run_in_executor(
                     None,
                     lambda: model.generate(
-                        text=chunk,
+                        prompts=chunk,
                         audio_prompt_path=voice_sample_path,
                         exaggeration=exaggeration,
-                        cfg_weight=cfg_weight,
-                        temperature=temperature
-                    )
+                        temperature=temperature,
+                        top_p=top_p,
+                        repetition_penalty=repetition_penalty
+                    )[0]  # Get first result from batch
                 )
                 
                 # Ensure tensor is on CPU for processing
@@ -778,8 +793,9 @@ async def text_to_speech(request: TTSRequest):
                 text=request.input,
                 voice_sample_path=voice_sample_path,
                 exaggeration=request.exaggeration,
-                cfg_weight=request.cfg_weight,
                 temperature=request.temperature,
+                top_p=request.top_p,
+                repetition_penalty=request.repetition_penalty,
                 streaming_chunk_size=request.streaming_chunk_size,
                 streaming_strategy=request.streaming_strategy,
                 streaming_quality=request.streaming_quality
@@ -797,8 +813,9 @@ async def text_to_speech(request: TTSRequest):
             text=request.input,
             voice_sample_path=voice_sample_path,
             exaggeration=request.exaggeration,
-            cfg_weight=request.cfg_weight,
-            temperature=request.temperature
+            temperature=request.temperature,
+            top_p=request.top_p,
+            repetition_penalty=request.repetition_penalty
         )
         
         # Create response
@@ -829,8 +846,9 @@ async def text_to_speech_with_upload(
     speed: Optional[float] = Form(1.0, description="Speed of speech (ignored)"),
     stream_format: Optional[str] = Form("audio", description="Streaming format: 'audio' for raw audio stream, 'sse' for Server-Side Events"),
     exaggeration: Optional[float] = Form(None, description="Emotion intensity (0.25-2.0)", ge=0.25, le=2.0),
-    cfg_weight: Optional[float] = Form(None, description="Pace control (0.0-1.0)", ge=0.0, le=1.0),
     temperature: Optional[float] = Form(None, description="Sampling temperature (0.05-5.0)", ge=0.05, le=5.0),
+    top_p: Optional[float] = Form(None, description="Top-p sampling (0.0-1.0)", ge=0.0, le=1.0),
+    repetition_penalty: Optional[float] = Form(None, description="Repetition penalty (1.0-3.0)", ge=1.0, le=3.0),
     streaming_chunk_size: Optional[int] = Form(None, description="Characters per streaming chunk (50-500)", ge=50, le=500),
     streaming_strategy: Optional[str] = Form(None, description="Chunking strategy (sentence, paragraph, fixed, word)"),
     streaming_quality: Optional[str] = Form(None, description="Quality preset (fast, balanced, high)"),
@@ -923,8 +941,9 @@ async def text_to_speech_with_upload(
                         text=input,
                         voice_sample_path=voice_sample_path,
                         exaggeration=exaggeration,
-                        cfg_weight=cfg_weight,
                         temperature=temperature,
+                        top_p=top_p,
+                        repetition_penalty=repetition_penalty,
                         streaming_chunk_size=streaming_chunk_size,
                         streaming_strategy=streaming_strategy,
                         streaming_quality=streaming_quality
@@ -955,8 +974,9 @@ async def text_to_speech_with_upload(
                 text=input,
                 voice_sample_path=voice_sample_path,
                 exaggeration=exaggeration,
-                cfg_weight=cfg_weight,
-                temperature=temperature
+                temperature=temperature,
+                top_p=top_p,
+                repetition_penalty=repetition_penalty
             )
             
             # Create response
@@ -1002,8 +1022,9 @@ async def stream_text_to_speech(request: TTSRequest):
             text=request.input,
             voice_sample_path=voice_sample_path,
             exaggeration=request.exaggeration,
-            cfg_weight=request.cfg_weight,
             temperature=request.temperature,
+            top_p=request.top_p,
+            repetition_penalty=request.repetition_penalty,
             streaming_chunk_size=request.streaming_chunk_size,
             streaming_strategy=request.streaming_strategy,
             streaming_quality=request.streaming_quality
@@ -1035,8 +1056,9 @@ async def stream_text_to_speech_with_upload(
     response_format: Optional[str] = Form("wav", description="Audio format (always returns WAV)"),
     speed: Optional[float] = Form(1.0, description="Speed of speech (ignored)"),
     exaggeration: Optional[float] = Form(None, description="Emotion intensity (0.25-2.0)", ge=0.25, le=2.0),
-    cfg_weight: Optional[float] = Form(None, description="Pace control (0.0-1.0)", ge=0.0, le=1.0),
     temperature: Optional[float] = Form(None, description="Sampling temperature (0.05-5.0)", ge=0.05, le=5.0),
+    top_p: Optional[float] = Form(None, description="Top-p sampling (0.0-1.0)", ge=0.0, le=1.0),
+    repetition_penalty: Optional[float] = Form(None, description="Repetition penalty (1.0-3.0)", ge=1.0, le=3.0),
     streaming_chunk_size: Optional[int] = Form(None, description="Characters per streaming chunk (50-500)", ge=50, le=500),
     streaming_strategy: Optional[str] = Form(None, description="Chunking strategy (sentence, paragraph, fixed, word)"),
     streaming_quality: Optional[str] = Form(None, description="Quality preset (fast, balanced, high)"),
@@ -1118,8 +1140,9 @@ async def stream_text_to_speech_with_upload(
                 text=input,
                 voice_sample_path=voice_sample_path,
                 exaggeration=exaggeration,
-                cfg_weight=cfg_weight,
                 temperature=temperature,
+                top_p=top_p,
+                repetition_penalty=repetition_penalty,
                 streaming_chunk_size=streaming_chunk_size,
                 streaming_strategy=streaming_strategy,
                 streaming_quality=streaming_quality

@@ -6,7 +6,7 @@ import os
 import asyncio
 from enum import Enum
 from typing import Optional
-from chatterbox.tts import ChatterboxTTS
+from chatterbox_vllm.tts import ChatterboxTTS
 from app.config import Config, detect_device
 
 # Global model instance
@@ -80,7 +80,11 @@ async def initialize_model():
         loop = asyncio.get_event_loop()
         _model = await loop.run_in_executor(
             None, 
-            lambda: ChatterboxTTS.from_pretrained(device=_device)
+            lambda: ChatterboxTTS.from_pretrained(
+                target_device=_device,
+                max_batch_size=10,
+                max_model_len=1000
+            )
         )
         
         _initialization_state = InitializationState.READY.value
@@ -129,4 +133,18 @@ def is_ready():
 
 def is_initializing():
     """Check if the model is currently initializing"""
-    return _initialization_state == InitializationState.INITIALIZING.value 
+    return _initialization_state == InitializationState.INITIALIZING.value
+
+
+def shutdown_model():
+    """Shutdown the model and cleanup resources"""
+    global _model, _initialization_state
+    if _model is not None:
+        try:
+            _model.shutdown()
+            print("✓ Model shutdown completed")
+        except Exception as e:
+            print(f"⚠️ Warning during model shutdown: {e}")
+        finally:
+            _model = None
+            _initialization_state = InitializationState.NOT_STARTED.value

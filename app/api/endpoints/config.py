@@ -47,8 +47,9 @@ async def get_config():
         },
         defaults={
             "exaggeration": Config.EXAGGERATION,
-            "cfg_weight": Config.CFG_WEIGHT,
             "temperature": Config.TEMPERATURE,
+            "top_p": Config.TOP_P,
+            "repetition_penalty": Config.REPETITION_PENALTY,
             "max_chunk_length": Config.MAX_CHUNK_LENGTH,
             "max_total_length": Config.MAX_TOTAL_LENGTH
         },

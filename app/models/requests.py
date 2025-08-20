@@ -17,8 +17,9 @@ class TTSRequest(BaseModel):
     
     # Custom TTS parameters
     exaggeration: Optional[float] = Field(None, description="Emotion intensity", ge=0.25, le=2.0)
-    cfg_weight: Optional[float] = Field(None, description="Pace control", ge=0.0, le=1.0)
     temperature: Optional[float] = Field(None, description="Sampling temperature", ge=0.05, le=5.0)
+    top_p: Optional[float] = Field(None, description="Top-p sampling", ge=0.0, le=1.0)
+    repetition_penalty: Optional[float] = Field(None, description="Repetition penalty", ge=1.0, le=3.0)
     
     # Streaming-specific parameters
     streaming_chunk_size: Optional[int] = Field(None, description="Characters per streaming chunk", ge=50, le=500)

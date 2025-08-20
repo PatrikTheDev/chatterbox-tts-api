@@ -1,6 +1,6 @@
-# Chatterbox TTS Core Package
+# Chatterbox TTS Core Package (using VLLM version)
 #chatterbox-tts
-chatterbox-tts @ git+https://github.com/resemble-ai/chatterbox.git
+chatterbox-vllm @ git+https://github.com/randombk/chatterbox-vllm.git
 
 # Required for Chatterbox TTS watermarker functionality
 resemble-perth

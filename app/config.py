@@ -19,8 +19,9 @@ class Config:
     
     # TTS Model settings
     EXAGGERATION = float(os.getenv('EXAGGERATION', 0.5))
-    CFG_WEIGHT = float(os.getenv('CFG_WEIGHT', 0.5))
     TEMPERATURE = float(os.getenv('TEMPERATURE', 0.8))
+    TOP_P = float(os.getenv('TOP_P', 0.8))
+    REPETITION_PENALTY = float(os.getenv('REPETITION_PENALTY', 2.0))
     
     # Text processing
     MAX_CHUNK_LENGTH = int(os.getenv('MAX_CHUNK_LENGTH', 280))
@@ -47,8 +48,10 @@ class Config:
         """Validate configuration values"""
         if not (0.25 <= cls.EXAGGERATION <= 2.0):
             raise ValueError(f"EXAGGERATION must be between 0.25 and 2.0, got {cls.EXAGGERATION}")
-        if not (0.0 <= cls.CFG_WEIGHT <= 1.0):
-            raise ValueError(f"CFG_WEIGHT must be between 0.0 and 1.0, got {cls.CFG_WEIGHT}")
+        if not (0.0 <= cls.TOP_P <= 1.0):
+            raise ValueError(f"TOP_P must be between 0.0 and 1.0, got {cls.TOP_P}")
+        if not (1.0 <= cls.REPETITION_PENALTY <= 3.0):
+            raise ValueError(f"REPETITION_PENALTY must be between 1.0 and 3.0, got {cls.REPETITION_PENALTY}")
         if not (0.05 <= cls.TEMPERATURE <= 5.0):
             raise ValueError(f"TEMPERATURE must be between 0.05 and 5.0, got {cls.TEMPERATURE}")
         if cls.MAX_CHUNK_LENGTH <= 0:

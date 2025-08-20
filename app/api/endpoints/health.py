@@ -55,8 +55,9 @@ async def health_check():
             "max_total_length": Config.MAX_TOTAL_LENGTH,
             "voice_sample_path": Config.VOICE_SAMPLE_PATH,
             "default_exaggeration": Config.EXAGGERATION,
-            "default_cfg_weight": Config.CFG_WEIGHT,
-            "default_temperature": Config.TEMPERATURE
+            "default_temperature": Config.TEMPERATURE,
+            "default_top_p": Config.TOP_P,
+            "default_repetition_penalty": Config.REPETITION_PENALTY
         },
         memory_info=get_memory_info(),
         initialization_state=init_state,
