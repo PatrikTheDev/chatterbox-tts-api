@@ -5,6 +5,9 @@ chatterbox-vllm @ git+https://github.com/randombk/chatterbox-vllm.git
 # Required for Chatterbox TTS watermarker functionality
 resemble-perth
 
+# Required for model downloading (used by chatterbox-vllm)
+huggingface_hub
+
 # PyTorch with CPU support (ensure CPU compatibility)
 torch>=2.0.0,<2.7.0
 torchaudio>=2.0.0,<2.7.0

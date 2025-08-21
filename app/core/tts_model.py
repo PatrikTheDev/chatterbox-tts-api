@@ -6,6 +6,7 @@ import os
 import asyncio
 from enum import Enum
 from typing import Optional
+from pathlib import Path
 from chatterbox_vllm.tts import ChatterboxTTS
 from app.config import Config, detect_device
 
@@ -76,16 +77,55 @@ async def initialize_model():
                 safetensors.torch.load_file = force_cpu_load_file
         
         _initialization_progress = "Loading TTS model (this may take a while)..."
+        
+        # Debug: Check current working directory and t3-model structure
+        cwd = os.getcwd()
+        print(f"Current working directory: {cwd}")
+        t3_model_dir = Path("./t3-model")
+        print(f"t3-model directory exists: {t3_model_dir.exists()}")
+        if t3_model_dir.exists():
+            print(f"t3-model contents: {list(t3_model_dir.iterdir())}")
+        
         # Initialize model with run_in_executor for non-blocking
         loop = asyncio.get_event_loop()
-        _model = await loop.run_in_executor(
-            None, 
-            lambda: ChatterboxTTS.from_pretrained(
+        
+        def init_model_with_symlinks():
+            """Initialize model and ensure proper symlinks for vLLM"""
+            # Import here to avoid circular imports
+            from huggingface_hub import hf_hub_download
+            
+            # Download model files if not cached
+            repo_id = "ResembleAI/chatterbox"
+            revision = "1b475dffa71fb191cb6d5901215eb6f55635a9b6"
+            
+            # Ensure all required files are downloaded
+            for fpath in ["ve.safetensors", "t3_cfg.safetensors", "s3gen.safetensors", "tokenizer.json", "conds.pt"]:
+                local_path = hf_hub_download(repo_id=repo_id, filename=fpath, revision=revision)
+            
+            # Create symlinks for vLLM model directory
+            cache_dir = Path(local_path).parent
+            t3_model_dir = Path("./t3-model")
+            
+            # Symlink model weights
+            model_safetensors_path = t3_model_dir / "model.safetensors"
+            model_safetensors_path.unlink(missing_ok=True)
+            model_safetensors_path.symlink_to(cache_dir / "t3_cfg.safetensors")
+            
+            # Symlink tokenizer (in case vLLM expects it in model dir)
+            tokenizer_path = t3_model_dir / "tokenizer.json" 
+            tokenizer_path.unlink(missing_ok=True)
+            tokenizer_path.symlink_to(cache_dir / "tokenizer.json")
+            
+            print(f"✓ Created symlinks for vLLM model directory")
+            
+            # Now initialize the model
+            return ChatterboxTTS.from_pretrained(
                 target_device=_device,
                 max_batch_size=10,
                 max_model_len=1000
             )
-        )
+        
+        _model = await loop.run_in_executor(None, init_model_with_symlinks)
         
         _initialization_state = InitializationState.READY.value
         _initialization_progress = "Model ready"

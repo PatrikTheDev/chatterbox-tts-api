@@ -28,7 +28,7 @@ RUN uv venv --python 3.10
 # Skip: RUN uv pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
 
 # Install base dependencies first
-RUN uv pip install setuptools fastapi uvicorn[standard] python-dotenv python-multipart requests psutil
+RUN uv pip install setuptools fastapi uvicorn[standard] python-dotenv python-multipart requests psutil huggingface_hub
 
 # Install resemble-perth specifically (required for watermarker)
 RUN uv pip install resemble-perth
@@ -41,6 +41,7 @@ COPY app/ ./app/
 COPY main.py ./
 
 # Copy t3-model directory (required for chatterbox-vllm)
+# This contains config.json and will have symlinks created during initialization
 COPY t3-model/ ./t3-model/
 
 # Copy voice sample if it exists (optional, can be mounted)

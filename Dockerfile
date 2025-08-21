@@ -24,7 +24,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # Copy requirements and install other dependencies
 COPY requirements.txt ./
-RUN pip install --no-cache-dir fastapi uvicorn[standard] python-dotenv python-multipart requests psutil resemble-perth
+RUN pip install --no-cache-dir fastapi uvicorn[standard] python-dotenv python-multipart requests psutil resemble-perth huggingface_hub
 RUN pip install --no-cache-dir "chatterbox-vllm @ git+https://github.com/randombk/chatterbox-vllm.git"
 
 # Copy application code

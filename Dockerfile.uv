@@ -28,7 +28,7 @@ RUN uv venv --python 3.11
 RUN uv pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
 
 # Install base dependencies first
-RUN uv pip install fastapi uvicorn[standard] python-dotenv python-multipart requests psutil
+RUN uv pip install fastapi uvicorn[standard] python-dotenv python-multipart requests psutil huggingface_hub
 
 # Install resemble-perth specifically (required for watermarker)
 RUN uv pip install resemble-perth
