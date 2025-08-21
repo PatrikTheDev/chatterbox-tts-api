@@ -33,8 +33,8 @@ RUN uv pip install setuptools fastapi uvicorn[standard] python-dotenv python-mul
 # Install resemble-perth specifically (required for watermarker)
 RUN uv pip install resemble-perth
 
-# Install chatterbox-tts using uv (from git as specified in pyproject.toml)
-RUN uv pip install "chatterbox-tts @ git+https://github.com/resemble-ai/chatterbox.git"
+# Install chatterbox-vllm using uv (from git as specified in pyproject.toml)
+RUN uv pip install "chatterbox-vllm @ git+https://github.com/randombk/chatterbox-vllm.git"
 
 # Copy application code
 COPY app/ ./app/
@@ -49,7 +49,8 @@ RUN mkdir -p /cache /voices
 # Set default environment variables (prefer CUDA)
 ENV PORT=4123
 ENV EXAGGERATION=0.5
-ENV CFG_WEIGHT=0.5
+ENV TOP_P=0.8
+ENV REPETITION_PENALTY=2.0
 ENV TEMPERATURE=0.8
 ENV VOICE_SAMPLE_PATH=/app/voice-sample.mp3
 ENV MAX_CHUNK_LENGTH=280

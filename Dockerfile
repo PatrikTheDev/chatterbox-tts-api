@@ -24,7 +24,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # Copy requirements and install other dependencies
 COPY requirements.txt ./
-RUN pip install --no-cache-dir fastapi uvicorn[standard] python-dotenv python-multipart requests psutil chatterbox-tts
+RUN pip install --no-cache-dir fastapi uvicorn[standard] python-dotenv python-multipart requests psutil resemble-perth
+RUN pip install --no-cache-dir "chatterbox-vllm @ git+https://github.com/randombk/chatterbox-vllm.git"
 
 # Copy application code
 COPY app/ ./app/
@@ -39,7 +40,8 @@ RUN mkdir -p /cache /voices
 # Set default environment variables
 ENV PORT=4123
 ENV EXAGGERATION=0.5
-ENV CFG_WEIGHT=0.5
+ENV TOP_P=0.8
+ENV REPETITION_PENALTY=2.0
 ENV TEMPERATURE=0.8
 ENV VOICE_SAMPLE_PATH=/app/voice-sample.mp3
 ENV MAX_CHUNK_LENGTH=280

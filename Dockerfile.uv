@@ -36,11 +36,11 @@ RUN uv pip install resemble-perth
 # Verify resemble-perth installation
 RUN . .venv/bin/activate && python -c "import perth; print('✓ resemble-perth installed successfully')"
 
-# Install chatterbox-tts after ensuring perth is available
-RUN uv pip install "chatterbox-tts @ git+https://github.com/resemble-ai/chatterbox.git"
+# Install chatterbox-vllm after ensuring perth is available
+RUN uv pip install "chatterbox-vllm @ git+https://github.com/randombk/chatterbox-vllm.git"
 
 # Verify full installation
-RUN . .venv/bin/activate && python -c "import chatterbox; import perth; print('✓ All dependencies installed successfully')"
+RUN . .venv/bin/activate && python -c "import chatterbox_vllm; import perth; print('✓ All dependencies installed successfully')"
 
 # Copy application code
 COPY app/ ./app/
@@ -55,7 +55,8 @@ RUN mkdir -p /cache /voices
 # Set default environment variables
 ENV PORT=4123
 ENV EXAGGERATION=0.5
-ENV CFG_WEIGHT=0.5
+ENV TOP_P=0.8
+ENV REPETITION_PENALTY=2.0
 ENV TEMPERATURE=0.8
 ENV VOICE_SAMPLE_PATH=/app/voice-sample.mp3
 ENV MAX_CHUNK_LENGTH=280
