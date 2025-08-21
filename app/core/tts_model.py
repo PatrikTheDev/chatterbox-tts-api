@@ -140,6 +140,18 @@ async def initialize_model():
             
             # Now initialize the model
             print("Attempting to initialize ChatterboxTTS...")
+            
+            # Test if we can import EnTokenizer first
+            try:
+                from chatterbox_vllm.models.t3.entokenizer import EnTokenizer
+                print("✓ EnTokenizer can be imported")
+                
+                # Test creating an instance
+                tokenizer_test = EnTokenizer.from_pretrained()
+                print("✓ EnTokenizer can be instantiated")
+            except Exception as tokenizer_error:
+                print(f"✗ EnTokenizer issue: {tokenizer_error}")
+            
             try:
                 model = ChatterboxTTS.from_pretrained(
                     target_device=_device,
@@ -151,6 +163,9 @@ async def initialize_model():
             except Exception as e:
                 print(f"✗ ChatterboxTTS initialization failed: {e}")
                 print(f"Error type: {type(e).__name__}")
+                import traceback
+                print("Full traceback:")
+                traceback.print_exc()
                 
                 # Additional debugging for common vLLM errors
                 if "No such file or directory" in str(e):
