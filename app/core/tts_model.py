@@ -154,9 +154,23 @@ async def initialize_model():
                 from chatterbox_vllm.models.t3.entokenizer import EnTokenizer
                 print("✓ EnTokenizer can be imported")
                 
-                # Test creating an instance
+                # Test creating an instance and check vocab size
                 tokenizer_test = EnTokenizer.from_pretrained()
-                print("✓ EnTokenizer can be instantiated")
+                vocab_size = tokenizer_test.get_vocab_size()
+                print(f"✓ EnTokenizer can be instantiated")
+                print(f"EnTokenizer vocab size: {vocab_size}")
+                print(f"EnTokenizer vocab sample: {list(tokenizer_test.get_vocab().keys())[:10]}")
+                
+                # Check config.json vocab size
+                with open('./t3-model/config.json', 'r') as f:
+                    import json
+                    config = json.load(f)
+                    config_vocab_size = config.get('vocab_size', 'not found')
+                    print(f"Config vocab_size: {config_vocab_size}")
+                    
+                    if vocab_size != config_vocab_size:
+                        print(f"⚠️ VOCAB SIZE MISMATCH: EnTokenizer={vocab_size}, config.json={config_vocab_size}")
+                        
             except Exception as tokenizer_error:
                 print(f"✗ EnTokenizer issue: {tokenizer_error}")
             
