@@ -111,7 +111,15 @@ async def initialize_model():
             model_safetensors_path.unlink(missing_ok=True)
             model_safetensors_path.symlink_to(cache_dir / "t3_cfg.safetensors")
             
-            # Symlink tokenizer (in case vLLM expects it in model dir)
+            # Symlink tokenizer to the package directory where EnTokenizer expects it
+            import chatterbox_vllm.models.t3.entokenizer
+            package_tokenizer_dir = Path(chatterbox_vllm.models.t3.entokenizer.__file__).parent
+            package_tokenizer_path = package_tokenizer_dir / "tokenizer.json"
+            package_tokenizer_path.unlink(missing_ok=True)
+            package_tokenizer_path.symlink_to(cache_dir / "tokenizer.json")
+            print(f"✓ Created tokenizer symlink: {package_tokenizer_path} -> {cache_dir / 'tokenizer.json'}")
+            
+            # Also symlink in t3-model directory (in case vLLM expects it there too)
             tokenizer_path = t3_model_dir / "tokenizer.json" 
             tokenizer_path.unlink(missing_ok=True)
             tokenizer_path.symlink_to(cache_dir / "tokenizer.json")
