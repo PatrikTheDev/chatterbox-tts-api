@@ -31,6 +31,9 @@ RUN pip install --no-cache-dir "chatterbox-vllm @ git+https://github.com/randomb
 COPY app/ ./app/
 COPY main.py ./
 
+# Copy t3-model directory (required for chatterbox-vllm)
+COPY t3-model/ ./t3-model/
+
 # Copy voice sample if it exists (optional, can be mounted)
 COPY voice-sample.mp3 ./voice-sample.mp3
 
