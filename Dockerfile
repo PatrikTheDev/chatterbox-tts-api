@@ -25,7 +25,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy requirements and install other dependencies
 COPY requirements.txt ./
 RUN pip install --no-cache-dir fastapi uvicorn[standard] python-dotenv python-multipart requests psutil resemble-perth huggingface_hub
-RUN pip install --no-cache-dir "chatterbox-vllm @ git+https://github.com/randombk/chatterbox-vllm.git"
+# Clone and install chatterbox-vllm in development mode to include all source files (like tokenizer.json)
+RUN git clone https://github.com/randombk/chatterbox-vllm.git /tmp/chatterbox-vllm && \
+    pip install --no-cache-dir -e /tmp/chatterbox-vllm
 
 # Copy application code
 COPY app/ ./app/
