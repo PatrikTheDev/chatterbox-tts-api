@@ -161,21 +161,50 @@ async def initialize_model():
                 print(f"EnTokenizer vocab size: {vocab_size}")
                 print(f"EnTokenizer vocab sample: {list(tokenizer_test.get_vocab().keys())[:10]}")
                 
-                # Check config.json vocab size and auto-fix if needed
+                # Check actual model weights to determine correct vocab size
+                print("🔍 Checking actual model weight dimensions...")
+                from safetensors import safe_open
+                model_weights_path = cache_dir / "t3_cfg.safetensors"
+                
+                vocab_sizes_found = {}
+                with safe_open(model_weights_path, framework="pt", device="cpu") as f:
+                    for key in f.keys():
+                        if 'embed' in key.lower() or 'vocab' in key.lower():
+                            tensor = f.get_tensor(key)
+                            print(f"Weight {key}: shape={tensor.shape}")
+                            if 'embed' in key.lower() and len(tensor.shape) == 2:
+                                vocab_sizes_found[key] = tensor.shape[0]
+                
+                print(f"Vocab sizes found in model weights: {vocab_sizes_found}")
+                
+                # Determine the correct vocab size from model weights
+                model_vocab_size = None
+                if vocab_sizes_found:
+                    # Use the most common vocab size from embedding layers
+                    model_vocab_size = max(set(vocab_sizes_found.values()), key=list(vocab_sizes_found.values()).count)
+                    print(f"🎯 Detected model vocab size: {model_vocab_size}")
+                
+                # Check config.json vocab size
                 config_path = './t3-model/config.json'
                 with open(config_path, 'r') as f:
                     import json
                     config = json.load(f)
                     config_vocab_size = config.get('vocab_size', 'not found')
                     print(f"Config vocab_size: {config_vocab_size}")
+                    print(f"EnTokenizer vocab_size: {vocab_size}")
                     
-                    if vocab_size != config_vocab_size:
-                        print(f"⚠️ VOCAB SIZE MISMATCH: EnTokenizer={vocab_size}, config.json={config_vocab_size}")
-                        print(f"🔧 Auto-fixing config.json vocab_size to {vocab_size}")
-                        config['vocab_size'] = vocab_size
+                    # Use the model weights as the source of truth
+                    if model_vocab_size and model_vocab_size != config_vocab_size:
+                        print(f"⚠️ CONFIG MISMATCH: model_weights={model_vocab_size}, config.json={config_vocab_size}")
+                        print(f"🔧 Updating config.json to match model weights: {model_vocab_size}")
+                        config['vocab_size'] = model_vocab_size
                         with open(config_path, 'w') as f_write:
                             json.dump(config, f_write, indent=4)
-                        print(f"✓ Updated config.json vocab_size to {vocab_size}")
+                        print(f"✓ Updated config.json vocab_size to {model_vocab_size}")
+                    
+                    if vocab_size != model_vocab_size:
+                        print(f"⚠️ TOKENIZER MISMATCH: EnTokenizer={vocab_size}, model_weights={model_vocab_size}")
+                        print(f"This suggests the tokenizer and model weights are from different versions")
                         
             except Exception as tokenizer_error:
                 print(f"✗ EnTokenizer issue: {tokenizer_error}")
