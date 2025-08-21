@@ -94,7 +94,24 @@ async def initialize_model():
             print("Initializing ChatterboxTTS using from_pretrained()...")
             
             try:
-                # Use the same approach as benchmark.py - let the library handle everything
+                # First ensure EnTokenizer can find tokenizer.json in package directory
+                from huggingface_hub import hf_hub_download
+                import chatterbox_vllm.models.t3.entokenizer
+                from pathlib import Path
+                
+                # Download tokenizer.json to HuggingFace cache
+                repo_id = "ResembleAI/chatterbox"
+                revision = "1b475dffa71fb191cb6d5901215eb6f55635a9b6"
+                tokenizer_cache_path = hf_hub_download(repo_id=repo_id, filename="tokenizer.json", revision=revision)
+                
+                # Create symlink where EnTokenizer expects it (in package directory)
+                package_tokenizer_dir = Path(chatterbox_vllm.models.t3.entokenizer.__file__).parent
+                package_tokenizer_path = package_tokenizer_dir / "tokenizer.json"
+                package_tokenizer_path.unlink(missing_ok=True)
+                package_tokenizer_path.symlink_to(tokenizer_cache_path)
+                print(f"✓ Created tokenizer symlink: {package_tokenizer_path} -> {tokenizer_cache_path}")
+                
+                # Now use the same approach as benchmark.py - let the library handle the rest
                 model = ChatterboxTTS.from_pretrained(
                     target_device=_device,
                     max_batch_size=10,
