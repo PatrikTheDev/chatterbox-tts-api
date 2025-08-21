@@ -94,9 +94,8 @@ async def initialize_model():
             print("Initializing ChatterboxTTS using from_pretrained()...")
             
             try:
-                # Use exactly the same approach as benchmark.py
+                # Use exactly the same approach as benchmark.py - no target_device parameter!
                 model = ChatterboxTTS.from_pretrained(
-                    target_device=_device,
                     max_batch_size=10,
                     max_model_len=1000
                 )
