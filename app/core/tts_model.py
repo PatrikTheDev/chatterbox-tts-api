@@ -89,127 +89,12 @@ async def initialize_model():
         # Initialize model with run_in_executor for non-blocking
         loop = asyncio.get_event_loop()
         
-        def init_model_with_symlinks():
-            """Initialize model and ensure proper symlinks for vLLM"""
-            # Import here to avoid circular imports
-            from huggingface_hub import hf_hub_download
-            
-            # Download model files if not cached
-            repo_id = "ResembleAI/chatterbox"
-            revision = "1b475dffa71fb191cb6d5901215eb6f55635a9b6"
-            
-            # Ensure all required files are downloaded
-            for fpath in ["ve.safetensors", "t3_cfg.safetensors", "s3gen.safetensors", "tokenizer.json", "conds.pt"]:
-                local_path = hf_hub_download(repo_id=repo_id, filename=fpath, revision=revision)
-            
-            # Create symlinks for vLLM model directory
-            cache_dir = Path(local_path).parent
-            t3_model_dir = Path("./t3-model")
-            
-            # Symlink model weights
-            model_safetensors_path = t3_model_dir / "model.safetensors"
-            model_safetensors_path.unlink(missing_ok=True)
-            model_safetensors_path.symlink_to(cache_dir / "t3_cfg.safetensors")
-            
-            # Symlink tokenizer to the package directory where EnTokenizer expects it
-            import chatterbox_vllm.models.t3.entokenizer
-            package_tokenizer_dir = Path(chatterbox_vllm.models.t3.entokenizer.__file__).parent
-            package_tokenizer_path = package_tokenizer_dir / "tokenizer.json"
-            package_tokenizer_path.unlink(missing_ok=True)
-            package_tokenizer_path.symlink_to(cache_dir / "tokenizer.json")
-            print(f"✓ Created tokenizer symlink: {package_tokenizer_path} -> {cache_dir / 'tokenizer.json'}")
-            
-            # Also symlink in t3-model directory (in case vLLM expects it there too)
-            tokenizer_path = t3_model_dir / "tokenizer.json" 
-            tokenizer_path.unlink(missing_ok=True)
-            tokenizer_path.symlink_to(cache_dir / "tokenizer.json")
-            
-            print(f"✓ Created symlinks for vLLM model directory")
-            
-            # Debug: Check final t3-model directory structure
-            print(f"Final t3-model directory contents:")
-            for item in t3_model_dir.iterdir():
-                if item.is_symlink():
-                    target = item.readlink()
-                    target_exists = target.exists()
-                    print(f"  {item.name} -> {target} (exists: {target_exists})")
-                else:
-                    print(f"  {item.name} (regular file)")
-            
-            # Check if all required files exist
-            required_files = ["config.json", "model.safetensors", "tokenizer.json"]
-            for filename in required_files:
-                filepath = t3_model_dir / filename
-                exists = filepath.exists()
-                print(f"Required file {filename}: exists={exists}")
-                if filepath.is_symlink():
-                    target = filepath.readlink()
-                    print(f"  -> symlink target: {target} (target exists: {target.exists()})")
-            
-            # Now initialize the model
-            print("Attempting to initialize ChatterboxTTS...")
-            
-            # Test if we can import EnTokenizer first
-            try:
-                from chatterbox_vllm.models.t3.entokenizer import EnTokenizer
-                print("✓ EnTokenizer can be imported")
-                
-                # Test creating an instance and check vocab size
-                tokenizer_test = EnTokenizer.from_pretrained()
-                vocab_size = tokenizer_test.get_vocab_size()
-                print(f"✓ EnTokenizer can be instantiated")
-                print(f"EnTokenizer vocab size: {vocab_size}")
-                print(f"EnTokenizer vocab sample: {list(tokenizer_test.get_vocab().keys())[:10]}")
-                
-                # Check actual model weights to determine correct vocab size
-                print("🔍 Checking actual model weight dimensions...")
-                from safetensors import safe_open
-                model_weights_path = cache_dir / "t3_cfg.safetensors"
-                
-                vocab_sizes_found = {}
-                with safe_open(model_weights_path, framework="pt", device="cpu") as f:
-                    for key in f.keys():
-                        if 'embed' in key.lower() or 'vocab' in key.lower():
-                            tensor = f.get_tensor(key)
-                            print(f"Weight {key}: shape={tensor.shape}")
-                            if 'embed' in key.lower() and len(tensor.shape) == 2:
-                                vocab_sizes_found[key] = tensor.shape[0]
-                
-                print(f"Vocab sizes found in model weights: {vocab_sizes_found}")
-                
-                # Determine the correct vocab size from model weights
-                model_vocab_size = None
-                if vocab_sizes_found:
-                    # Use the most common vocab size from embedding layers
-                    model_vocab_size = max(set(vocab_sizes_found.values()), key=list(vocab_sizes_found.values()).count)
-                    print(f"🎯 Detected model vocab size: {model_vocab_size}")
-                
-                # Check config.json vocab size
-                config_path = './t3-model/config.json'
-                with open(config_path, 'r') as f:
-                    import json
-                    config = json.load(f)
-                    config_vocab_size = config.get('vocab_size', 'not found')
-                    print(f"Config vocab_size: {config_vocab_size}")
-                    print(f"EnTokenizer vocab_size: {vocab_size}")
-                    
-                    # Use the model weights as the source of truth
-                    if model_vocab_size and model_vocab_size != config_vocab_size:
-                        print(f"⚠️ CONFIG MISMATCH: model_weights={model_vocab_size}, config.json={config_vocab_size}")
-                        print(f"🔧 Updating config.json to match model weights: {model_vocab_size}")
-                        config['vocab_size'] = model_vocab_size
-                        with open(config_path, 'w') as f_write:
-                            json.dump(config, f_write, indent=4)
-                        print(f"✓ Updated config.json vocab_size to {model_vocab_size}")
-                    
-                    if vocab_size != model_vocab_size:
-                        print(f"⚠️ TOKENIZER MISMATCH: EnTokenizer={vocab_size}, model_weights={model_vocab_size}")
-                        print(f"This suggests the tokenizer and model weights are from different versions")
-                        
-            except Exception as tokenizer_error:
-                print(f"✗ EnTokenizer issue: {tokenizer_error}")
+        def init_model_simple():
+            """Initialize model using the same approach as benchmark.py"""
+            print("Initializing ChatterboxTTS using from_pretrained()...")
             
             try:
+                # Use the same approach as benchmark.py - let the library handle everything
                 model = ChatterboxTTS.from_pretrained(
                     target_device=_device,
                     max_batch_size=10,
@@ -223,23 +108,9 @@ async def initialize_model():
                 import traceback
                 print("Full traceback:")
                 traceback.print_exc()
-                
-                # Additional debugging for common vLLM errors
-                if "No such file or directory" in str(e):
-                    print("This appears to be a missing file error. Checking common vLLM requirements...")
-                    
-                    # Check if vLLM can find the model directory
-                    print(f"Model directory './t3-model' exists: {Path('./t3-model').exists()}")
-                    
-                    # Check for additional files vLLM might expect
-                    possible_files = ["pytorch_model.bin", "model.bin", "generation_config.json", "tokenizer_config.json"]
-                    for possible_file in possible_files:
-                        filepath = t3_model_dir / possible_file
-                        print(f"Optional file {possible_file}: exists={filepath.exists()}")
-                
                 raise e
         
-        _model = await loop.run_in_executor(None, init_model_with_symlinks)
+        _model = await loop.run_in_executor(None, init_model_simple)
         
         _initialization_state = InitializationState.READY.value
         _initialization_progress = "Model ready"

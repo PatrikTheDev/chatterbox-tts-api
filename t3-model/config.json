@@ -29,5 +29,5 @@
     "tie_word_embeddings": false,
     "torch_dtype": "bfloat16",
     "use_cache": true,
-    "vocab_size": 704
+    "vocab_size": 8
 }
