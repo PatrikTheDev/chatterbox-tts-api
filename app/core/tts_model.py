@@ -118,12 +118,54 @@ async def initialize_model():
             
             print(f"✓ Created symlinks for vLLM model directory")
             
+            # Debug: Check final t3-model directory structure
+            print(f"Final t3-model directory contents:")
+            for item in t3_model_dir.iterdir():
+                if item.is_symlink():
+                    target = item.readlink()
+                    target_exists = target.exists()
+                    print(f"  {item.name} -> {target} (exists: {target_exists})")
+                else:
+                    print(f"  {item.name} (regular file)")
+            
+            # Check if all required files exist
+            required_files = ["config.json", "model.safetensors", "tokenizer.json"]
+            for filename in required_files:
+                filepath = t3_model_dir / filename
+                exists = filepath.exists()
+                print(f"Required file {filename}: exists={exists}")
+                if filepath.is_symlink():
+                    target = filepath.readlink()
+                    print(f"  -> symlink target: {target} (target exists: {target.exists()})")
+            
             # Now initialize the model
-            return ChatterboxTTS.from_pretrained(
-                target_device=_device,
-                max_batch_size=10,
-                max_model_len=1000
-            )
+            print("Attempting to initialize ChatterboxTTS...")
+            try:
+                model = ChatterboxTTS.from_pretrained(
+                    target_device=_device,
+                    max_batch_size=10,
+                    max_model_len=1000
+                )
+                print("✓ ChatterboxTTS initialized successfully")
+                return model
+            except Exception as e:
+                print(f"✗ ChatterboxTTS initialization failed: {e}")
+                print(f"Error type: {type(e).__name__}")
+                
+                # Additional debugging for common vLLM errors
+                if "No such file or directory" in str(e):
+                    print("This appears to be a missing file error. Checking common vLLM requirements...")
+                    
+                    # Check if vLLM can find the model directory
+                    print(f"Model directory './t3-model' exists: {Path('./t3-model').exists()}")
+                    
+                    # Check for additional files vLLM might expect
+                    possible_files = ["pytorch_model.bin", "model.bin", "generation_config.json", "tokenizer_config.json"]
+                    for possible_file in possible_files:
+                        filepath = t3_model_dir / possible_file
+                        print(f"Optional file {possible_file}: exists={filepath.exists()}")
+                
+                raise e
         
         _model = await loop.run_in_executor(None, init_model_with_symlinks)
         
