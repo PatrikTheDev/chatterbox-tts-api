@@ -161,8 +161,9 @@ async def initialize_model():
                 print(f"EnTokenizer vocab size: {vocab_size}")
                 print(f"EnTokenizer vocab sample: {list(tokenizer_test.get_vocab().keys())[:10]}")
                 
-                # Check config.json vocab size
-                with open('./t3-model/config.json', 'r') as f:
+                # Check config.json vocab size and auto-fix if needed
+                config_path = './t3-model/config.json'
+                with open(config_path, 'r') as f:
                     import json
                     config = json.load(f)
                     config_vocab_size = config.get('vocab_size', 'not found')
@@ -170,6 +171,11 @@ async def initialize_model():
                     
                     if vocab_size != config_vocab_size:
                         print(f"⚠️ VOCAB SIZE MISMATCH: EnTokenizer={vocab_size}, config.json={config_vocab_size}")
+                        print(f"🔧 Auto-fixing config.json vocab_size to {vocab_size}")
+                        config['vocab_size'] = vocab_size
+                        with open(config_path, 'w') as f_write:
+                            json.dump(config, f_write, indent=4)
+                        print(f"✓ Updated config.json vocab_size to {vocab_size}")
                         
             except Exception as tokenizer_error:
                 print(f"✗ EnTokenizer issue: {tokenizer_error}")
