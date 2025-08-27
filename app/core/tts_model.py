@@ -98,7 +98,6 @@ async def initialize_model():
                 model = ChatterboxTTS.from_pretrained(
                     max_batch_size=10,
                     max_model_len=1000,
-                    enforce_eager = True,
                 )
                 print("✓ ChatterboxTTS initialized successfully")
                 return model
