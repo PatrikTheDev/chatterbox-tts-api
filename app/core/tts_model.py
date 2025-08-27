@@ -109,7 +109,7 @@ async def initialize_model():
                 traceback.print_exc()
                 raise e
         
-        _model = await loop.run_in_executor(None, init_model_simple)
+        _model = init_model_simple() # await loop.run_in_executor(None, init_model_simple)
         
         _initialization_state = InitializationState.READY.value
         _initialization_progress = "Model ready"
