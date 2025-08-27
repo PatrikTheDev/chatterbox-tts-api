@@ -9,8 +9,8 @@ resemble-perth
 huggingface_hub
 
 # PyTorch with CPU support (ensure CPU compatibility)
-torch>=2.0.0,<2.7.0
-torchaudio>=2.0.0,<2.7.0
+torch>=2.0.0,<=2.7.1
+torchaudio>=2.0.0,<=2.7.1
 
 # FastAPI and ASGI server
 fastapi>=0.104.0
