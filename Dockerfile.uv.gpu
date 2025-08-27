@@ -24,8 +24,10 @@ WORKDIR /app
 # Create virtual environment (PyTorch already installed in base image)
 RUN uv venv --python 3.10
 
-# PyTorch with CUDA support is already installed in the base image
-# Skip: RUN uv pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+# Pin PyTorch in the venv to the version validated with vLLM 0.10.0
+# (avoid picking an incompatible wheel)
+RUN uv pip install --index-url https://download.pytorch.org/whl/cu126 \
+    torch==2.7.1 torchaudio==2.7.1 torchvision==0.22.1
 
 # Install base dependencies first
 RUN uv pip install setuptools fastapi uvicorn[standard] python-dotenv python-multipart requests psutil huggingface_hub
@@ -36,6 +38,7 @@ RUN uv pip install resemble-perth
 # Clone and install chatterbox-vllm in development mode to include all source files (like tokenizer.json)
 RUN git clone https://github.com/randombk/chatterbox-vllm.git /tmp/chatterbox-vllm && \
     uv pip install -e /tmp/chatterbox-vllm
+RUN uv pip install xformers==0.0.31
 
 # Copy application code
 COPY app/ ./app/
