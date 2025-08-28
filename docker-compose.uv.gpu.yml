@@ -67,6 +67,62 @@ services:
       - chatterbox-tts
     restart: unless-stopped
 
+  frontend-gpu0:
+    profiles: ['gpu4']
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: chatterbox-tts-frontend-0
+    ports:
+      - '4321:80'
+    depends_on:
+      - chatterbox-tts-gpu0
+    links:
+      - chatterbox-tts-gpu0:chatterbox-tts
+    restart: unless-stopped
+
+  frontend-gpu1:
+    profiles: ['gpu4']
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: chatterbox-tts-frontend-1
+    ports:
+      - '4322:80'
+    depends_on:
+      - chatterbox-tts-gpu1
+    links:
+      - chatterbox-tts-gpu1:chatterbox-tts
+    restart: unless-stopped
+
+  frontend-gpu2:
+    profiles: ['gpu4']
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: chatterbox-tts-frontend-2
+    ports:
+      - '4323:80'
+    depends_on:
+      - chatterbox-tts-gpu2
+    links:
+      - chatterbox-tts-gpu2:chatterbox-tts
+    restart: unless-stopped
+
+  frontend-gpu3:
+    profiles: ['gpu4']
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: chatterbox-tts-frontend-3
+    ports:
+      - '4324:80'
+    depends_on:
+      - chatterbox-tts-gpu3
+    links:
+      - chatterbox-tts-gpu3:chatterbox-tts
+    restart: unless-stopped
+
   # 4×GPU profile: four API instances pinned to GPU 0..3
   chatterbox-tts-gpu0:
     profiles: ['gpu4']
