@@ -3,6 +3,7 @@ version: '3.8'
 services:
   # Main API Service (always included)
   chatterbox-tts:
+    profiles: ['single', 'fullstack']
     build:
       dockerfile: Dockerfile.uv.gpu
     container_name: chatterbox-tts-api-uv-gpu
@@ -65,6 +66,171 @@ services:
     depends_on:
       - chatterbox-tts
     restart: unless-stopped
+
+  # 4×GPU profile: four API instances pinned to GPU 0..3
+  chatterbox-tts-gpu0:
+    profiles: ['gpu4']
+    build:
+      dockerfile: Dockerfile.uv.gpu
+    container_name: chatterbox-tts-api-uv-gpu-0
+    ports:
+      - '4124:4123'
+    environment:
+      # API Configuration
+      - PORT=4123
+      - HOST=0.0.0.0
+
+      # TTS Model Settings
+      - EXAGGERATION=${EXAGGERATION:-0.5}
+      - CFG_WEIGHT=${CFG_WEIGHT:-0.5}
+      - TEMPERATURE=${TEMPERATURE:-0.8}
+
+      # Text Processing
+      - MAX_CHUNK_LENGTH=${MAX_CHUNK_LENGTH:-280}
+      - MAX_TOTAL_LENGTH=${MAX_TOTAL_LENGTH:-3000}
+
+      # Voice and Model Settings
+      - VOICE_SAMPLE_PATH=/app/voice-sample.mp3
+      - DEVICE=${DEVICE:-cuda}
+      - MODEL_CACHE_DIR=${MODEL_CACHE_DIR:-/cache}
+      - VOICE_LIBRARY_DIR=${VOICE_LIBRARY_DIR:-/voices}
+
+      # NVIDIA/CUDA settings (do not set NVIDIA_VISIBLE_DEVICES here; device reservation below will scope visibility)
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    volumes:
+      - chatterbox-models:/cache
+      - chatterbox-voices:/voices
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:4123/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
+
+  chatterbox-tts-gpu1:
+    profiles: ['gpu4']
+    build:
+      dockerfile: Dockerfile.uv.gpu
+    container_name: chatterbox-tts-api-uv-gpu-1
+    ports:
+      - '4125:4123'
+    environment:
+      - PORT=4123
+      - HOST=0.0.0.0
+      - EXAGGERATION=${EXAGGERATION:-0.5}
+      - CFG_WEIGHT=${CFG_WEIGHT:-0.5}
+      - TEMPERATURE=${TEMPERATURE:-0.8}
+      - MAX_CHUNK_LENGTH=${MAX_CHUNK_LENGTH:-280}
+      - MAX_TOTAL_LENGTH=${MAX_TOTAL_LENGTH:-3000}
+      - VOICE_SAMPLE_PATH=/app/voice-sample.mp3
+      - DEVICE=${DEVICE:-cuda}
+      - MODEL_CACHE_DIR=${MODEL_CACHE_DIR:-/cache}
+      - VOICE_LIBRARY_DIR=${VOICE_LIBRARY_DIR:-/voices}
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    volumes:
+      - chatterbox-models:/cache
+      - chatterbox-voices:/voices
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["1"]
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:4123/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
+
+  chatterbox-tts-gpu2:
+    profiles: ['gpu4']
+    build:
+      dockerfile: Dockerfile.uv.gpu
+    container_name: chatterbox-tts-api-uv-gpu-2
+    ports:
+      - '4126:4123'
+    environment:
+      - PORT=4123
+      - HOST=0.0.0.0
+      - EXAGGERATION=${EXAGGERATION:-0.5}
+      - CFG_WEIGHT=${CFG_WEIGHT:-0.5}
+      - TEMPERATURE=${TEMPERATURE:-0.8}
+      - MAX_CHUNK_LENGTH=${MAX_CHUNK_LENGTH:-280}
+      - MAX_TOTAL_LENGTH=${MAX_TOTAL_LENGTH:-3000}
+      - VOICE_SAMPLE_PATH=/app/voice-sample.mp3
+      - DEVICE=${DEVICE:-cuda}
+      - MODEL_CACHE_DIR=${MODEL_CACHE_DIR:-/cache}
+      - VOICE_LIBRARY_DIR=${VOICE_LIBRARY_DIR:-/voices}
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    volumes:
+      - chatterbox-models:/cache
+      - chatterbox-voices:/voices
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["2"]
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:4123/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
+
+  chatterbox-tts-gpu3:
+    profiles: ['gpu4']
+    build:
+      dockerfile: Dockerfile.uv.gpu
+    container_name: chatterbox-tts-api-uv-gpu-3
+    ports:
+      - '4127:4123'
+    environment:
+      - PORT=4123
+      - HOST=0.0.0.0
+      - EXAGGERATION=${EXAGGERATION:-0.5}
+      - CFG_WEIGHT=${CFG_WEIGHT:-0.5}
+      - TEMPERATURE=${TEMPERATURE:-0.8}
+      - MAX_CHUNK_LENGTH=${MAX_CHUNK_LENGTH:-280}
+      - MAX_TOTAL_LENGTH=${MAX_TOTAL_LENGTH:-3000}
+      - VOICE_SAMPLE_PATH=/app/voice-sample.mp3
+      - DEVICE=${DEVICE:-cuda}
+      - MODEL_CACHE_DIR=${MODEL_CACHE_DIR:-/cache}
+      - VOICE_LIBRARY_DIR=${VOICE_LIBRARY_DIR:-/voices}
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    volumes:
+      - chatterbox-models:/cache
+      - chatterbox-voices:/voices
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["3"]
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:4123/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
 
 volumes:
   chatterbox-models:
