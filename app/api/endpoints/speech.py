@@ -24,6 +24,8 @@ from app.core import (
 )
 from app.core.tts_model import get_model
 from app.core.text_processing import split_text_for_streaming, get_streaming_settings
+from app.core.performance import monitor_tts_operation, perf_monitor, print_performance_summary
+from app.core.profiler import tts_profiler
 
 # Create router with aliasing support
 base_router = APIRouter()
@@ -222,25 +224,37 @@ async def generate_speech_internal(
             
             print(f"Generating audio for chunk {i+1}/{len(chunks)}: '{chunk[:50]}{'...' if len(chunk) > 50 else ''}'")
             
-            # Use torch.no_grad() to prevent gradient accumulation
-            with torch.no_grad():
-                # Run TTS generation in executor to avoid blocking
-                audio_tensor = await loop.run_in_executor(
-                    None,
-                    lambda: model.generate(
-                        text=chunk,
-                        audio_prompt_path=voice_sample_path,
-                        exaggeration=exaggeration,
-                        cfg_weight=cfg_weight,
-                        temperature=temperature
-                    )
-                )
-                
-                # Ensure tensor is on the correct device and detached
-                if hasattr(audio_tensor, 'detach'):
-                    audio_tensor = audio_tensor.detach()
-                
-                audio_chunks.append(audio_tensor)
+            # Performance monitoring for TTS generation
+            with monitor_tts_operation(
+                "TTS_GENERATE_CHUNK", 
+                text_length=len(chunk), 
+                chunk_index=i,
+                total_chunks=len(chunks),
+                exaggeration=exaggeration,
+                cfg_weight=cfg_weight,
+                temperature=temperature
+            ):
+                # PyTorch profiler step (if profiling is active)
+                with tts_profiler.profile_step(f"chunk_{i+1}_generate"):
+                    # Use torch.no_grad() to prevent gradient accumulation
+                    with torch.no_grad():
+                        # Run TTS generation in executor to avoid blocking
+                        audio_tensor = await loop.run_in_executor(
+                            None,
+                            lambda: model.generate(
+                                text=chunk,
+                                audio_prompt_path=voice_sample_path,
+                                exaggeration=exaggeration,
+                                cfg_weight=cfg_weight,
+                                temperature=temperature
+                            )
+                        )
+                        
+                        # Ensure tensor is on the correct device and detached
+                        if hasattr(audio_tensor, 'detach'):
+                            audio_tensor = audio_tensor.detach()
+                        
+                        audio_chunks.append(audio_tensor)
             
             # Periodic memory cleanup during generation
             if i > 0 and i % 3 == 0:  # Every 3 chunks
@@ -274,6 +288,10 @@ async def generate_speech_internal(
         # Mark as completed
         update_tts_status(request_id, TTSStatus.COMPLETED, "Audio generation completed")
         print(f"✓ Audio generation completed. Size: {len(buffer.getvalue()):,} bytes")
+        
+        # Print performance summary every 5 requests for analysis
+        if REQUEST_COUNTER % 5 == 0:
+            print_performance_summary()
         
         return buffer
         

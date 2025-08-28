@@ -8,6 +8,7 @@ from enum import Enum
 from typing import Optional
 from chatterbox.tts import ChatterboxTTS
 from app.config import Config, detect_device
+from app.core.performance import monitor_tts_operation
 
 # Global model instance
 _model = None
@@ -77,11 +78,12 @@ async def initialize_model():
         
         _initialization_progress = "Loading TTS model (this may take a while)..."
         # Initialize model with run_in_executor for non-blocking
-        loop = asyncio.get_event_loop()
-        _model = await loop.run_in_executor(
-            None, 
-            lambda: ChatterboxTTS.from_pretrained(device=_device)
-        )
+        with monitor_tts_operation("MODEL_INITIALIZATION", device=_device):
+            loop = asyncio.get_event_loop()
+            _model = await loop.run_in_executor(
+                None, 
+                lambda: ChatterboxTTS.from_pretrained(device=_device)
+            )
         
         _initialization_state = InitializationState.READY.value
         _initialization_progress = "Model ready"
