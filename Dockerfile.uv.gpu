@@ -66,8 +66,8 @@ RUN uv pip install \
     s3tokenizer \
     soundfile
 
-# (Optional) Perth watermarker if you need it later:
-# RUN uv pip install resemble-perth
+# Perth watermarker
+RUN uv pip install resemble-perth
 
 # Copy application code
 COPY app/ ./app/
