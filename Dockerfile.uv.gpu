@@ -23,8 +23,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Set Python 3.11 as default
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 && \
+    update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
 
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
@@ -35,17 +35,39 @@ WORKDIR /app
 # Create virtual environment
 RUN uv venv --python 3.11
 
-# Install PyTorch with CUDA support using uv
+# Add uv venv to PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Install PyTorch with CUDA 12.4 wheels
 RUN uv pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
 
-# Install base dependencies first
-RUN uv pip install setuptools fastapi uvicorn[standard] python-dotenv python-multipart requests psutil
+# Install base runtime deps
+RUN uv pip install \
+    setuptools \
+    fastapi \
+    uvicorn[standard] \
+    python-dotenv \
+    python-multipart \
+    requests \
+    psutil
 
-# Install resemble-perth specifically (required for watermarker)
+# ---- IMPORTANT: install chatterbox-tts WITHOUT deps to avoid gradio/russian-text-stresser ----
+RUN uv pip install --no-deps "chatterbox-tts @ git+https://github.com/resemble-ai/chatterbox.git"
+
+# Add only the safe library deps chatterbox actually uses (no gradio, no russian-text-stresser)
+# If you later need extras, add them here explicitly.
+RUN uv pip install \
+    numpy \
+    librosa \
+    transformers \
+    safetensors \
+    accelerate \
+    einops \
+    s3tokenizer \
+    soundfile
+
+# (Optional) Perth watermarker if you need it later:
 # RUN uv pip install resemble-perth
-
-# Install chatterbox-tts using uv
-RUN uv pip install chatterbox-tts
 
 # Copy application code
 COPY app/ ./app/
@@ -74,9 +96,6 @@ ENV HOST=0.0.0.0
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
-# Add uv venv to PATH
-ENV PATH="/app/.venv/bin:$PATH"
-
 # Expose port
 EXPOSE ${PORT}
 
@@ -84,5 +103,5 @@ EXPOSE ${PORT}
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5m --retries=3 \
     CMD curl -f http://localhost:${PORT}/health || exit 1
 
-# Run the application using the new entry point
-CMD ["python", "main.py"] 
+# Run the application
+CMD ["python", "main.py"]
