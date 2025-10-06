@@ -48,10 +48,10 @@ services:
     restart: unless-stopped
 
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:${PORT:-4123}/health']
+      test: ["CMD-SHELL", "curl -fsS http://localhost:$${PORT:-4123}/ping || curl -fsS http://localhost:$${PORT:-4123}/health || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 300s
 
   # Frontend Service with integrated proxy (optional - requires 'frontend' profile)
@@ -168,10 +168,10 @@ services:
     restart: unless-stopped
 
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:4123/health']
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4123/ping || curl -fsS http://localhost:4123/health || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 300s
 
   chatterbox-tts-gpu1:
@@ -206,10 +206,10 @@ services:
               capabilities: [gpu]
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:4123/health']
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4123/ping || curl -fsS http://localhost:4123/health || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 300s
 
   chatterbox-tts-gpu2:
@@ -244,10 +244,10 @@ services:
               capabilities: [gpu]
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:4123/health']
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4123/ping || curl -fsS http://localhost:4123/health || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 300s
 
   chatterbox-tts-gpu3:
@@ -282,10 +282,10 @@ services:
               capabilities: [gpu]
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:4123/health']
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4123/ping || curl -fsS http://localhost:4123/health || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 300s
 
 volumes:
